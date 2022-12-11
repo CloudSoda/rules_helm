@@ -1,0 +1,6 @@
+image:
+  tag: latest-fake
+  repository: fake-nginx
+
+BAD:
+entries

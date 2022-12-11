@@ -1,4 +1,5 @@
 load("//helpers:helpers.bzl", "write_sh", "get_make_value_or_default")
+load("@aspect_bazel_lib//lib:stamping.bzl", "STAMP_ATTRS", "maybe_stamp")
 
 def runfile(ctx, f):
   """Return the runfiles relative path of f."""
@@ -22,7 +23,8 @@ def _gcs_upload_impl(ctx):
 
     exec_file = ctx.actions.declare_file(ctx.label.name + "_gcs_upload_bash")
 
-    stamp_files = [ctx.info_file, ctx.version_file]
+    stamp = maybe_stamp(ctx)
+    stamp_files = [stamp.volatile_status_file, stamp.stable_status_file] if stamp else []
 
     # Generates the exec bash file with the provided substitutions
     ctx.actions.expand_template(
@@ -38,11 +40,11 @@ def _gcs_upload_impl(ctx):
         }
     )
 
-    
+
 
 
     runfiles = ctx.runfiles(
-        files = [ctx.info_file, ctx.version_file, src_file]
+        files = stamp_files + [src_file]
     )
 
     return [DefaultInfo(
@@ -52,11 +54,11 @@ def _gcs_upload_impl(ctx):
 
 gcs_upload = rule(
     implementation = _gcs_upload_impl,
-    attrs = {
+    attrs = dict({
       "src": attr.label(allow_single_file = True, mandatory = True),
       "destination": attr.string(mandatory = True),
       "_script_template": attr.label(allow_single_file = True, default = ":gcs-upload.sh.tpl"),
-    },
+    }, **STAMP_ATTRS),
     doc = "Upload a file to a Google Cloud Storage Bucket",
     toolchains = [],
     executable = True,

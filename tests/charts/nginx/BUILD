@@ -1,6 +1,6 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//helm:helm.bzl", "helm_chart", "helm_release", "helm_push")
+load("//helm:helm.bzl", "helm_chart", "helm_release", "helm_push", "helm_lint_test")
 load("//k8s:k8s.bzl", "k8s_namespace")
 load("@com_github_masmovil_bazel_rules//sops:sops.bzl", "sops_decrypt")
 
@@ -53,6 +53,12 @@ helm_chart(
   srcs = glob(["**"]),
   helm_chart_version = "1.0.0",
   package_name = "nginx"
+)
+
+helm_lint_test(
+  name = "nginx_lint",
+  chart = "nginx_chart",
+  package_name = "nginx",
 )
 
 helm_push(

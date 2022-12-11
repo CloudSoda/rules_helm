@@ -6,6 +6,7 @@ This repository contains Bazel rules to install and manipulate Helm charts with 
 
 This repo implements the following bazel rules:
  `helm_chart`
+ `helm_lint_test`
  `helm_push`
  `helm_release`
  `sops_decrypt`
@@ -52,6 +53,12 @@ load("@com_github_masmovil_bazel_rules//helm:helm.bzl", "helm_chart", "helm_push
 helm_chart(
     name = "my_chart",
     srcs = glob(["**"]),
+    ...
+)
+
+helm_lint_test(
+    name = "my_chart_lint",
+    chart = ":my_chart",
     ...
 )
 
@@ -117,7 +124,6 @@ The following attributes are accepted by the rule (some of them are mandatory).
 | chart_deps | no | - | Helm chart dependencies of this rules. Defined as a list of dependencies of other helm_chart rules (bazel targets). |
 | additional_templates | no | [] | List of labels or files to be added to the `templates/` folder of the chart. Useful for centralizing common templates and pass them around different charts. |
 
-
 #### Use of make_variables
 `image_tag` and `helm_chart_version` attributes support make variables. Make variables are provided to bazel through the `--define` argument.
 To enable make variables, string values have to be inside curly braces `image_tag="{GIT_SHA}"`.
@@ -145,6 +151,28 @@ helm_chart(
 )
 ```
 These variables have to be "exported" by the `status.sh` file defined in your project root dir.
+
+### helm_lint_test
+
+`helm_lint_test` is used to examine a chart to verify that it is well-formed. The rule will take a helm package (targz) and validate it.
+
+This rule is a test and should be invoked with `test` instead of `build` or `run`.
+
+Example of use:
+```python
+helm_lint_test(
+  name = "flex_lint",
+  chart  = ":flex_package",
+  package_name = "flex",
+)
+```
+
+The following attributes are accepted by the rule (some of them are mandatory).
+
+|  Attribute | Mandatory| Default | Notes |
+| ---------- | --- | ------ | -------------- |
+| chart | yes | - | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
+| package_name | yes | - | The name of the helm package. It must be the same name that was defined in the Chart.yaml |
 
 ### helm_push
 
@@ -175,7 +203,6 @@ The following attributes are accepted by the rule (some of them are mandatory).
 | repository_url | true | - | The url of the the chart museum repository. **IMPORTANT: The url must end with slash /**  |
 | repository_username | true | - | The username to login in to the chart museum registry using basic auth. It supports the use of `make_variables` |
 | repository_password | true | - | The password to login in to the chart museum registry using basic auth. It supports the use of `make_variables` |
-
 
 ### helm_release
 
@@ -309,7 +336,6 @@ load("@com_github_masmovil_bazel_rules//k8s:k8s.bzl", "k8s_namespace")
 
 ```
 
-
 ### k8s_namespace
 
 `k8s_namespace` is used to create a new namespace.
@@ -362,7 +388,6 @@ The following attributes are accepted by the rule (some of them are mandatory).
 | gcp_gke_project | no | - | GKE Project |
 | workload_identity_namespace | no | - | Workload Identity Namespace. I.E. `mm-k8s-dev-01.svc.id.goog` |
 | kubernetes_context | no | "" | Context of kubernetes cluster |
-
 
 ## GCS rules
 
