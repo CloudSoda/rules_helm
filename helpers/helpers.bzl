@@ -1,5 +1,5 @@
 # Generates a bash file from string template replacing
-# placeholders with provided substition values
+# placeholders with provided substitution values
 def write_sh(ctx, sh_filename, tpl, substitutions = {}, is_executable = True):
   tmp_sh = ctx.actions.declare_file(ctx.label.name + "_tmp_" + sh_filename)
   sh_file = ctx.actions.declare_file(ctx.label.name + "_" + sh_filename)

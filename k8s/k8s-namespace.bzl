@@ -1,5 +1,6 @@
 
 load("//helpers:helpers.bzl", "write_sh", "get_make_value_or_default")
+load("@aspect_bazel_lib//lib:stamping.bzl", "STAMP_ATTRS", "maybe_stamp")
 
 NamespaceDataInfo = provider(fields=["namespace"])
 
@@ -40,7 +41,8 @@ def _k8s_namespace_impl(ctx):
         if workload_identity_namespace == "":
              fail(msg='ERROR: workload_identity_namespace must be provided if gcp_sa is set')
 
-    stamp_files = [ctx.info_file, ctx.version_file]
+    stamp = maybe_stamp(ctx)
+    stamp_files = [stamp.volatile_status_file, stamp.stable_status_file] if stamp else []
 
     exec_file = ctx.actions.declare_file(ctx.label.name + "_k8s_bash")
 
@@ -64,7 +66,7 @@ def _k8s_namespace_impl(ctx):
     )
 
     runfiles = ctx.runfiles(
-        files = [ctx.info_file, ctx.version_file]
+        files = stamp_files
     )
 
     return [DefaultInfo(
@@ -77,7 +79,7 @@ def _k8s_namespace_impl(ctx):
 
 k8s_namespace = rule(
     implementation = _k8s_namespace_impl,
-    attrs = {
+    attrs = dict({
       "namespace_name": attr.string(mandatory = True),
       "kubernetes_sa": attr.string(mandatory = True, default = "default"),
       "gcp_sa_project": attr.string(mandatory = False),
@@ -86,7 +88,7 @@ k8s_namespace = rule(
       "workload_identity_namespace": attr.string(mandatory = False),
       "kubernetes_context": attr.string(mandatory = False),
       "_script_template": attr.label(allow_single_file = True, default = ":k8s-namespace.sh.tpl"),
-    },
+    }, **STAMP_ATTRS),
     doc = "Creates a new kubernetes namespace and annotates it with workload identity",
     toolchains = [],
     executable = True,
