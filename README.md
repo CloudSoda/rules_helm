@@ -1,16 +1,16 @@
-# bazel rules
+# rules_helm
 
-![Build Status](https://github.com/masmovil/bazel-rules/actions/workflows/integration-tests.yaml/badge.svg)
+![Build Status](https://github.com/CloudSoda/rules_helm/actions/workflows/integration-tests.yaml/badge.svg)
 
-This repository contains Bazel rules to install and manipulate Helm charts with Bazel.
+This repository features Bazel rules for installing and managing Helm charts using Bazel. It's a fork of [github.com/masmovil/bazel-rules/](https://github.com/masmovil/bazel-rules/), expanded and updated to enhance functionality. Contributions are welcomed.
 
 This repo implements the following bazel rules:
- `helm_chart`
- `helm_lint_test`
- `helm_push`
- `helm_release`
- `sops_decrypt`
- `k8s_namespace`
+`helm_chart`
+`helm_lint_test`
+`helm_push`
+`helm_release`
+`sops_decrypt`
+`k8s_namespace`
 
 ## Documentation
 
@@ -74,7 +74,7 @@ helm_release(
 )
 ```
 
-These rules use [yq library](https://yq.readthedocs.io/en/latest/) to perform substitions in helm YAML templates. The binaries are preloaded by this rule using bazel toolchains, so you don't need have yq available in your path.
+These rules use [yq library](https://yq.readthedocs.io/en/latest/) to perform substitutions in helm YAML templates. The binaries are preloaded by this rule using bazel toolchains, so you don't need have yq available in your path.
 
 ## Helm rules
 
@@ -84,6 +84,7 @@ You can use `helm_chart` rule to create a new helm package. Before creating the 
 The rule creates a tar.gz file in the bazel output directory. The name of the generated tar.gz will be the package_name.
 
 Example of use:
+
 ```python
 helm_chart(
   name = "flex_package",
@@ -110,21 +111,22 @@ helm_chart(
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| srcs | yes | - | Chart source files. Must be a list of **bazel labels** (or a glob pattern) containing the path where the helm chart files and values are placed. Just one helm package should placed under `srcs` files. |
-| image | no | - | Label referencing another bazel rule that implements [docker container image rule](https://github.com/bazelbuild/rules_docker#container_image-1). This attr is used to obtain the digest of the built docker image and use it as the docker image tag of the application. |
-| image_tag | no | - | Fixed image tag value that will be used in the deployment. It can contain a string (e.g `master`), or the key of a make variable if is included in curly braces (e.g {GIT_COMMIT}). If a make variable format is used, the variable has to be provided through the `--define` method. Note: This attribute is an alternative to the `image` attribute if you want to provide a "fixed" image tag of your application instead of using a bazel rule to generate the docker image of your app. If you specify both, `image` attribute has preferenece.  |
-| package_name | yes | - | The name of the helm package. It must be the same name that was defined in the Chart.yaml |
-| helm_chart_version | no | `1.0.0` | Used to replace the Chart.yaml version of the helm package. It has to be defined following the [semver](https://semver.org/) nomenclature. Support make variables if the attribute is placed inside curly braces (e.g {HELM_VERSION}) and stamped variables using the following nomenclature: ${HELM_VERSION}|
-| app_version | no | helm_chart_version | Used to replace the Chart.yaml appVersion of the helm package, defaulting to traditional behavior of equaling the helm_chart_version if not given.  A freeform value should be fine, but following the [semver](https://semver.org/) nomenclature is recommended. Support make variables if the attribute is placed inside curly braces (e.g {APP_VERSION} but not {APP_VERSION}-some-suffix) and stamped variables using the following nomenclature: ${APP_VERSION}|
-| image_repository | no | - | The url of the docker registry where the docker image is stored. This is usually where the `image.repository` points to in the values.yaml file |
-| values_repo_yaml_path | no | `image.repository` | The yaml path (expressed in dot notation) of values.yaml where the key of the image repository is defined in the values.yaml. |
-| values_tag_yaml_path | no | `image.tag` | The yaml path (expressed in dot notation) of values.yaml where the key of the image tag is defined in the values.yaml |
-| chart_deps | no | - | Helm chart dependencies of this rules. Defined as a list of dependencies of other helm_chart rules (bazel targets). |
-| additional_templates | no | [] | List of labels or files to be added to the `templates/` folder of the chart. Useful for centralizing common templates and pass them around different charts. |
+| Attribute             | Mandatory | Default            | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --------------------- | --------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| srcs                  | yes       | -                  | Chart source files. Must be a list of **bazel labels** (or a glob pattern) containing the path where the helm chart files and values are placed. Just one helm package should placed under `srcs` files.                                                                                                                                                                                                                                                                                                                                            |
+| image                 | no        | -                  | Label referencing another bazel rule that implements [docker container image rule](https://github.com/bazelbuild/rules_docker#container_image-1). This attr is used to obtain the digest of the built docker image and use it as the docker image tag of the application.                                                                                                                                                                                                                                                                           |
+| image_tag             | no        | -                  | Fixed image tag value that will be used in the deployment. It can contain a string (e.g `master`), or the key of a make variable if is included in curly braces (e.g {GIT_COMMIT}). If a make variable format is used, the variable has to be provided through the `--define` method. Note: This attribute is an alternative to the `image` attribute if you want to provide a "fixed" image tag of your application instead of using a bazel rule to generate the docker image of your app. If you specify both, `image` attribute has preference. |
+| package_name          | yes       | -                  | The name of the helm package. It must be the same name that was defined in the Chart.yaml                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| helm_chart_version    | no        | `1.0.0`            | Used to replace the Chart.yaml version of the helm package. It has to be defined following the [semver](https://semver.org/) nomenclature. Support make variables if the attribute is placed inside curly braces (e.g {HELM_VERSION}) and stamped variables using the following nomenclature: ${HELM_VERSION}                                                                                                                                                                                                                                       |
+| app_version           | no        | helm_chart_version | Used to replace the Chart.yaml appVersion of the helm package, defaulting to traditional behavior of equaling the helm_chart_version if not given. A freeform value should be fine, but following the [semver](https://semver.org/) nomenclature is recommended. Support make variables if the attribute is placed inside curly braces (e.g {APP_VERSION} but not {APP_VERSION}-some-suffix) and stamped variables using the following nomenclature: ${APP_VERSION}                                                                                 |
+| image_repository      | no        | -                  | The url of the docker registry where the docker image is stored. This is usually where the `image.repository` points to in the values.yaml file                                                                                                                                                                                                                                                                                                                                                                                                     |
+| values_repo_yaml_path | no        | `image.repository` | The yaml path (expressed in dot notation) of values.yaml where the key of the image repository is defined in the values.yaml.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| values_tag_yaml_path  | no        | `image.tag`        | The yaml path (expressed in dot notation) of values.yaml where the key of the image tag is defined in the values.yaml                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| chart_deps            | no        | -                  | Helm chart dependencies of this rules. Defined as a list of dependencies of other helm_chart rules (bazel targets).                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| additional_templates  | no        | []                 | List of labels or files to be added to the `templates/` folder of the chart. Useful for centralizing common templates and pass them around different charts.                                                                                                                                                                                                                                                                                                                                                                                        |
 
 #### Use of make_variables
+
 `image_tag` and `helm_chart_version` attributes support make variables. Make variables are provided to bazel through the `--define` argument.
 To enable make variables, string values have to be inside curly braces `image_tag="{GIT_SHA}"`.
 
@@ -142,14 +144,15 @@ helm_chart(
 #### Use of stamp variables
 
 You can specify volatile variables in any attribute using the following sintaxis: `${}` e.g:
-```python
 
+```python
 helm_chart(
   ...
   helm_chart_version = "${VERSION}",
   ...
 )
 ```
+
 These variables have to be "exported" by the `status.sh` file defined in your project root dir.
 
 ### helm_lint_test
@@ -159,6 +162,7 @@ These variables have to be "exported" by the `status.sh` file defined in your pr
 This rule is a test and should be invoked with `test` instead of `build` or `run`.
 
 Example of use:
+
 ```python
 helm_lint_test(
   name = "flex_lint",
@@ -169,10 +173,10 @@ helm_lint_test(
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| chart | yes | - | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
-| package_name | yes | - | The name of the helm package. It must be the same name that was defined in the Chart.yaml |
+| Attribute    | Mandatory | Default | Notes                                                                                                                                                                                                                                                                     |
+| ------------ | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chart        | yes       | -       | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
+| package_name | yes       | -       | The name of the helm package. It must be the same name that was defined in the Chart.yaml                                                                                                                                                                                 |
 
 ### helm_push
 
@@ -183,6 +187,7 @@ This rule is an executable. It needs `run` instead of `build` to be invoked.
 It authenticates against chart museum api using basic auth, so valid username and password have to be provided.
 
 Example of use:
+
 ```python
 helm_push(
   name = "flex_push",
@@ -196,13 +201,13 @@ helm_push(
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| chart | yes | - | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
-| repository_name | true | - | The name of the chart museum repository |
-| repository_url | true | - | The url of the the chart museum repository. **IMPORTANT: The url must end with slash /**  |
-| repository_username | true | - | The username to login in to the chart museum registry using basic auth. It supports the use of `make_variables` |
-| repository_password | true | - | The password to login in to the chart museum registry using basic auth. It supports the use of `make_variables` |
+| Attribute           | Mandatory | Default | Notes                                                                                                                                                                                                                                                                     |
+| ------------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chart               | yes       | -       | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
+| repository_name     | true      | -       | The name of the chart museum repository                                                                                                                                                                                                                                   |
+| repository_url      | true      | -       | The url of the the chart museum repository. **IMPORTANT: The url must end with slash /**                                                                                                                                                                                  |
+| repository_username | true      | -       | The username to login in to the chart museum registry using basic auth. It supports the use of `make_variables`                                                                                                                                                           |
+| repository_password | true      | -       | The password to login in to the chart museum registry using basic auth. It supports the use of `make_variables`                                                                                                                                                           |
 
 ### helm_release
 
@@ -215,6 +220,7 @@ This rule is an executable. It needs `run` instead of `build` to be invoked.
 It relies in existing local kubernetes config (`~/.kube/config`).
 
 Example of use:
+
 ```python
 helm_release(
     name = "chart_install",
@@ -228,6 +234,7 @@ helm_release(
 ```
 
 Example of use with k8s_namespace:
+
 ```python
 k8s_namespace(
   name = "test-namespace",
@@ -248,18 +255,19 @@ helm_release(
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| chart | yes | - | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
-| namespace | false | default | Namespace name literal where this release is installed to. It supports the use of `stamp_variables`. |
-| namespace_dep | false | - | Namespace where this release is installed to. Must be a label to a k8s_namespace rule. It takes precedence over namespace |
-| tiller_namespace | false | kube-system | Namespace where Tiller lives in the Kubernetes Cluste. It supports the use of `stamp_variables`. Unnecessary using helm v3 |
-| release_name | yes | - | Name of the Helm release. It supports the use of `stamp_variables`|
-| values_yaml | no | - | Several values files can be passed when installing release |
-| helm_version | no | "" | Force the use of helm v2 or v3 to deploy the release. The attribute can be set to **v2** or **v3** |
-| kubernetes_context | no | "" | Context of kubernetes cluster |
+| Attribute          | Mandatory | Default     | Notes                                                                                                                                                                                                                                                                     |
+| ------------------ | --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| chart              | yes       | -           | Chart package (targz). Must be a label that specifies where the helm package file (Chart.yaml) is. It accepts the path of the targz file (that bazel will resolve to the file) or the label to a target rule that generates a helm package as output (`helm_chart` rule). |
+| namespace          | false     | default     | Namespace name literal where this release is installed to. It supports the use of `stamp_variables`.                                                                                                                                                                      |
+| namespace_dep      | false     | -           | Namespace where this release is installed to. Must be a label to a k8s_namespace rule. It takes precedence over namespace                                                                                                                                                 |
+| tiller_namespace   | false     | kube-system | Namespace where Tiller lives in the Kubernetes Cluster. It supports the use of `stamp_variables`. Unnecessary using helm v3                                                                                                                                               |
+| release_name       | yes       | -           | Name of the Helm release. It supports the use of `stamp_variables`                                                                                                                                                                                                        |
+| values_yaml        | no        | -           | Several values files can be passed when installing release                                                                                                                                                                                                                |
+| helm_version       | no        | ""          | Force the use of helm v2 or v3 to deploy the release. The attribute can be set to **v2** or **v3**                                                                                                                                                                        |
+| kubernetes_context | no        | ""          | Context of kubernetes cluster                                                                                                                                                                                                                                             |
 
 ## Sops rules
+
 Decrypting secrets using [sops](https://github.com/mozilla/sops) is now supported.
 
 To install `sops_decrypt` rule, import in your `BUILD.bazel`
@@ -274,6 +282,7 @@ You can decrypt as many secrets as you want using `sops_decrypt` rule. Use the r
 The rule also needs the sops config file with the keyring id in order to decrypt files (`.sops.yaml`). You can provide it using the `sops_yaml` rule attribute.
 
 Example of use:
+
 ```python
 sops_decrypt(
     name = "decrypt_secret_files",
@@ -283,19 +292,21 @@ sops_decrypt(
 ```
 
 You can specify which provider integration you want to use (gcp KMS, azure key vault etc.) through the `provider` attribute.
-* For the moment only gcp KMS is supported
+
+- For the moment only gcp KMS is supported
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| src | yes | - | One or more labels pointing to the secret files to decrypt. It accepts a glob pattern. |
-| sops_yaml | yes | - | One label referencing the `.sops.yaml` yaml with the sops config. |
-| provider | false | "gcp_kms" | The provider integration used to decrypt/encrypt the secrets. |
+| Attribute | Mandatory | Default   | Notes                                                                                  |
+| --------- | --------- | --------- | -------------------------------------------------------------------------------------- |
+| src       | yes       | -         | One or more labels pointing to the secret files to decrypt. It accepts a glob pattern. |
+| sops_yaml | yes       | -         | One label referencing the `.sops.yaml` yaml with the sops config.                      |
+| provider  | false     | "gcp_kms" | The provider integration used to decrypt/encrypt the secrets.                          |
 
 The output of the rule are the decrypted secrets that you can pass to `helm_release`.
 
 Example of use:
+
 ```python
 sops_decrypt(
     name = "decrypt_secret_files",
@@ -342,6 +353,7 @@ load("@com_github_masmovil_bazel_rules//k8s:k8s.bzl", "k8s_namespace")
 You can also configure GKE Workload Identity with it.
 
 Example of use:
+
 ```python
 k8s_namespace(
     name = "namespace",
@@ -358,6 +370,7 @@ k8s_namespace(
 You can use `k8s_namespace` in combination with `helm_release` trough `napesmace_dep` attribute.
 
 Example of use with helm_release:
+
 ```python
 k8s_namespace(
   name = "test-namespace",
@@ -378,16 +391,16 @@ helm_release(
 
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| namespace_name | yes | - | Name of the namespace to create |
-| kubernetes_sa | no | - | Kubernetes Service Account to associate with Workload Identity. I.E. default It supports the use of `stamp_variables`. |
-| kubernetes_sa | no | kube-system | Namespace where Tiller lives in the Kubernetes Cluster. It supports the use of `stamp_variables`.|
-| gcp_sa_project | no | - |GCP project name where Service Account lives. I.E. `my-project`|
-| gcp_sa | no | - | GCP Service Account. I.E.  `my-account@my-project.iam.gserviceaccount.com`|
-| gcp_gke_project | no | - | GKE Project |
-| workload_identity_namespace | no | - | Workload Identity Namespace. I.E. `mm-k8s-dev-01.svc.id.goog` |
-| kubernetes_context | no | "" | Context of kubernetes cluster |
+| Attribute                   | Mandatory | Default     | Notes                                                                                                                  |
+| --------------------------- | --------- | ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| namespace_name              | yes       | -           | Name of the namespace to create                                                                                        |
+| kubernetes_sa               | no        | -           | Kubernetes Service Account to associate with Workload Identity. I.E. default It supports the use of `stamp_variables`. |
+| kubernetes_sa               | no        | kube-system | Namespace where Tiller lives in the Kubernetes Cluster. It supports the use of `stamp_variables`.                      |
+| gcp_sa_project              | no        | -           | GCP project name where Service Account lives. I.E. `my-project`                                                        |
+| gcp_sa                      | no        | -           | GCP Service Account. I.E. `my-account@my-project.iam.gserviceaccount.com`                                              |
+| gcp_gke_project             | no        | -           | GKE Project                                                                                                            |
+| workload_identity_namespace | no        | -           | Workload Identity Namespace. I.E. `mm-k8s-dev-01.svc.id.goog`                                                          |
+| kubernetes_context          | no        | ""          | Context of kubernetes cluster                                                                                          |
 
 ## GCS rules
 
@@ -405,6 +418,7 @@ load("@com_github_masmovil_bazel_rules//gcs:gcs.bzl", "gcs_upload")
 `gcs_upload` is used to upload a single file to a Google Cloud Storage bucket
 
 Example of use:
+
 ```python
 gcs_upload(
     name = "push",
@@ -413,10 +427,9 @@ gcs_upload(
 )
 ```
 
-
 The following attributes are accepted by the rule (some of them are mandatory).
 
-|  Attribute | Mandatory| Default | Notes |
-| ---------- | --- | ------ | -------------- |
-| src | yes | - | Source file label |
-| destination | yes | - | Destination path in GCS (in form of`gs://mybucket/file`) It supports the use of `stamp_variables`. |
+| Attribute   | Mandatory | Default | Notes                                                                                              |
+| ----------- | --------- | ------- | -------------------------------------------------------------------------------------------------- |
+| src         | yes       | -       | Source file label                                                                                  |
+| destination | yes       | -       | Destination path in GCS (in form of`gs://mybucket/file`) It supports the use of `stamp_variables`. |
