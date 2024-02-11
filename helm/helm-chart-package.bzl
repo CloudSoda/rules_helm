@@ -69,7 +69,7 @@ def _helm_chart_impl(ctx):
                 outputs = [out],
                 inputs = [srcfile],
                 arguments = [srcfile.path, out.path],
-                command = "cp $1 $2",
+                command = "cp -r $1 $2",
             )
 
     if tmp_chart_root == "":
@@ -113,7 +113,7 @@ def _helm_chart_impl(ctx):
                 outputs = [out],
                 inputs = [file],
                 arguments = [file.path, out.path],
-                command = "cp $1 $2",
+                command = "cp -r $1 $2",
             )
 
     exec_file = ctx.actions.declare_file(ctx.label.name + "_helm_bash")
